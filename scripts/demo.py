@@ -63,7 +63,7 @@ def scenario(title: str, explanation: str, value: float, payer: int, payee: int)
     print(f"\n{'=' * 72}")
     print(f"  {title}")
     print(f"  {explanation}")
-    print(f"\n  POST /transfer  {{\"value\": {value}, \"payer\": {payer}, \"payee\": {payee}}}")
+    print(f'\n  POST /transfer  {{"value": {value}, "payer": {payer}, "payee": {payee}}}')
 
     # o autorizador REAL nega aleatoriamente (~1/3): parte do desafio.
     # aqui re-tentamos so para a demo nao parar; a API em si NAO faz retry.
