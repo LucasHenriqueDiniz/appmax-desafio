@@ -22,9 +22,7 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     type: Mapped[str] = mapped_column(String(20))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     wallet: Mapped["WalletModel"] = relationship(back_populates="user")
 
@@ -71,9 +69,5 @@ class TransferModel(Base):
     payee_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     status: Mapped[str] = mapped_column(String(20), default=TransferStatus.COMPLETED)
-    notification_status: Mapped[str] = mapped_column(
-        String(20), default=NotificationStatus.PENDING
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    notification_status: Mapped[str] = mapped_column(String(20), default=NotificationStatus.PENDING)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

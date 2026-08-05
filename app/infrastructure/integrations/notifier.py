@@ -32,9 +32,7 @@ class NotifierClient:
                 continue
             if response.status_code in (200, 204):
                 return True
-            logger.warning(
-                "notificador respondeu %s (tentativa %d)", response.status_code, attempt
-            )
+            logger.warning("notificador respondeu %s (tentativa %d)", response.status_code, attempt)
         return False
 
     def close(self) -> None:

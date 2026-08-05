@@ -110,9 +110,7 @@ class TransferService:
         sent = self._notifier.notify()
         status = NotificationStatus.SENT if sent else NotificationStatus.FAILED
         if not sent:
-            logger.warning(
-                "notificacao falhou (transferencia mantida): transfer=%s", transfer_id
-            )
+            logger.warning("notificacao falhou (transferencia mantida): transfer=%s", transfer_id)
         with self._uow_factory() as uow:
             uow.transfers.set_notification_status(transfer_id, status)
             uow.commit()
