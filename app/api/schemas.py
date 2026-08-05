@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class TransferRequest(BaseModel):
@@ -27,6 +27,11 @@ class TransferResponse(BaseModel):
     status: str
     notification_status: str
     created_at: datetime
+
+    @field_serializer("value")
+    def serialize_value(self, value: Decimal) -> str:
+        # dinheiro sempre com 2 casas na resposta ("100.00", nunca "100.0")
+        return f"{value:.2f}"
 
 
 class ErrorResponse(BaseModel):
