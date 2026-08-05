@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: appmax
+      POSTGRES_PASSWORD: appmax
+      POSTGRES_DB: appmax
+    ports:
+      - "5432:5432"  # exposto para rodar os testes de integracao do host
+    healthcheck:
+      # a API so sobe quando o Postgres estiver ACEITANDO CONEXOES,
+      # nao apenas com o container de pe (evita connection refused no boot)
+      test: ["CMD-SHELL", "pg_isready -U appmax -d appmax"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://appmax:appmax@db:5432/appmax
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
