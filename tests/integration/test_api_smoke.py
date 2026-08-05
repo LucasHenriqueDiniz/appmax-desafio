@@ -69,6 +69,16 @@ def test_saldo_insuficiente_responde_409(client, session_factory):
     assert response.json()["code"] == "INSUFFICIENT_BALANCE"
 
 
+def test_id_fora_do_range_do_banco_responde_422_nao_500(client, session_factory):
+    # achado de revisao de seguranca: int maior que o INTEGER do Postgres
+    # deve morrer na validacao da borda, nao estourar no driver
+    response = client.post(
+        "/transfer", json={"value": 10.0, "payer": 99999999999999999999, "payee": 2}
+    )
+
+    assert response.status_code == 422
+
+
 def test_pagador_inexistente_responde_404(client, session_factory):
     seed_user(session_factory, 4, "500.00")
 

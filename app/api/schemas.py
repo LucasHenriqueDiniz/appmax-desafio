@@ -15,8 +15,10 @@ class TransferRequest(BaseModel):
     """
 
     value: Annotated[Decimal, Field(gt=0, max_digits=18, decimal_places=2)]
-    payer: int
-    payee: int
+    # limitados ao range do INTEGER do Postgres: id fora do range vira 422
+    # na borda em vez de estourar no driver como 500
+    payer: Annotated[int, Field(ge=1, le=2_147_483_647)]
+    payee: Annotated[int, Field(ge=1, le=2_147_483_647)]
 
 
 class TransferResponse(BaseModel):
