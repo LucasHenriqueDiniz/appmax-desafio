@@ -12,5 +12,6 @@ __pycache__/
 # Ambiente
 .env
 
-# Material de gravação do vídeo (não faz parte da entrega)
+# Material de gravação do vídeo e estudo (não faz parte da entrega)
 roteiro.md
+GUIA-DE-ESTUDO.md

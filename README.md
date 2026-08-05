@@ -20,6 +20,12 @@ curl -X POST http://localhost:8000/transfer \
 
 Documentação interativa em `http://localhost:8000/docs`. Health check em `GET /health` (verifica também a conexão com o banco).
 
+Para uma demonstração guiada (roda os cenários principais e mostra os saldos mudando — incluindo o invariante da soma):
+
+```bash
+uv run python scripts/demo.py
+```
+
 ### Como rodar os testes
 
 ```bash
