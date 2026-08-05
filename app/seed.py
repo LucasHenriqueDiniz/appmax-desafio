@@ -79,5 +79,7 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    from app.logging_config import setup_logging
+
+    setup_logging()
     run()

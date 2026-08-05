@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,11 +9,9 @@ from app.config import settings
 from app.infrastructure.database.repositories import SqlAlchemyUnitOfWork
 from app.infrastructure.integrations.authorizer import AuthorizerClient
 from app.infrastructure.integrations.notifier import NotifierClient
+from app.logging_config import setup_logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-)
+setup_logging()
 
 
 @asynccontextmanager
