@@ -36,6 +36,7 @@ def test_contrato_do_enunciado_funciona_como_esta_escrito(client, session_factor
     response = client.post("/transfer", json={"value": 100.0, "payer": 4, "payee": 15})
 
     assert response.status_code == 201
+    assert response.headers["x-request-id"]  # correlaciona logs de uma mesma requisicao
     body = response.json()
     assert body["status"] == "completed"
     assert body["payer"] == 4

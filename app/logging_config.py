@@ -9,6 +9,8 @@ import logging
 import os
 import re
 
+from app.request_context import request_id_var
+
 _RESET = "\x1b[0m"
 _DIM = "\x1b[2m"
 _BOLD = "\x1b[1m"
@@ -31,6 +33,10 @@ class ColorFormatter(logging.Formatter):
         timestamp = self.formatTime(record, "%H:%M:%S")
         name = record.name.removeprefix("app.")
         message = record.getMessage()
+        # correlaciona linhas da mesma requisicao sob concorrencia;
+        # fora de requisicao (boot, seed) o campo fica vazio
+        request_id = request_id_var.get()
+        rid = f"[{request_id}] " if request_id != "-" else ""
 
         if self._use_colors:
             level_color = _LEVEL_COLORS.get(record.levelno, "")
@@ -38,10 +44,10 @@ class ColorFormatter(logging.Formatter):
             line = (
                 f"{_DIM}{timestamp}{_RESET} "
                 f"{level_color}{record.levelname:<8}{_RESET} "
-                f"{_DIM}{name:<15}{_RESET} {message}"
+                f"{_DIM}{name:<15}{_RESET} {_DIM}{rid}{_RESET}{message}"
             )
         else:
-            line = f"{timestamp} {record.levelname:<8} {name:<15} {message}"
+            line = f"{timestamp} {record.levelname:<8} {name:<15} {rid}{message}"
 
         if record.exc_info:
             line += "\n" + self.formatException(record.exc_info)
