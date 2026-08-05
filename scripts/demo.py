@@ -15,6 +15,21 @@ DB_URL = "postgresql+psycopg://appmax:appmax@localhost:5432/appmax"
 
 engine = create_engine(DB_URL)
 
+# saldos originais do seed: restaurados no inicio de cada run para a
+# narrativa dos cenarios ser sempre verdadeira (transferencias de runs
+# anteriores movem dinheiro de verdade e drenariam o pagador)
+SEED_BALANCES = {1: "1000.00", 2: "100.00", 3: "0.00", 4: "500.00", 5: "250.00", 15: "0.00"}
+
+
+def reset_seed_balances() -> None:
+    with engine.begin() as connection:
+        for user_id, balance in SEED_BALANCES.items():
+            connection.execute(
+                text("UPDATE wallets SET balance = :balance WHERE user_id = :user_id"),
+                {"balance": balance, "user_id": user_id},
+            )
+    print("  (saldos restaurados aos valores do seed — a demo e reproduzivel)")
+
 
 def get_balances() -> list[tuple]:
     query = """
@@ -44,7 +59,7 @@ def post_transfer(value: float, payer: int, payee: int) -> httpx.Response:
     )
 
 
-def scenario(title: str, explanation: str, value: float, payer: int, payee: int) -> None:
+def scenario(title: str, explanation: str, value: float, payer: int, payee: int) -> httpx.Response:
     print(f"\n{'=' * 72}")
     print(f"  {title}")
     print(f"  {explanation}")
@@ -64,6 +79,7 @@ def scenario(title: str, explanation: str, value: float, payer: int, payee: int)
     print(f"  -> HTTP {response.status_code}")
     for key, val in body.items():
         print(f"       {key}: {val}")
+    return response
 
 
 def main() -> None:
@@ -74,16 +90,21 @@ def main() -> None:
         sys.exit(1)
     print(f"API de pe: {health}")
 
-    show_balances("Saldos iniciais (criados pelo seed):")
+    reset_seed_balances()
+    show_balances("Saldos iniciais (valores do seed):")
 
-    scenario(
+    response = scenario(
         "CENARIO 1 — o contrato exato do enunciado",
-        "Usuario 4 (comum, com saldo) transfere 100 para o 15 (lojista). Esperado: 201.",
+        "Usuario 4 (comum, com saldo 500) transfere 100 para o 15 (lojista). Esperado: 201.",
         100.0,
         4,
         15,
     )
-    show_balances("Saldos depois (repare: 4 perdeu 100, 15 ganhou 100, soma igual):")
+    if response.status_code == 201:
+        show_balances("Saldos depois (repare: 4 perdeu 100, 15 ganhou 100, soma igual):")
+    else:
+        print("\n  AVISO: o cenario 1 nao concluiu (autorizador negou 5x seguidas?).")
+        print("  Rode o script de novo — nada foi alterado no banco.")
 
     scenario(
         "CENARIO 2 — lojista tentando pagar",

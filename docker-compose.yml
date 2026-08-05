@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: appmax
       POSTGRES_PASSWORD: appmax
@@ -19,6 +20,9 @@ services:
 
   api:
     build: .
+    # depends_on so ordena a PRIMEIRA subida; num restart os dois voltam
+    # juntos e o boot pode achar o banco fora do ar — on-failure re-tenta
+    restart: on-failure
     environment:
       DATABASE_URL: postgresql+psycopg://appmax:appmax@db:5432/appmax
     ports:
