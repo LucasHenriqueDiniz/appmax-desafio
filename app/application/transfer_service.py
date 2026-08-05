@@ -67,6 +67,10 @@ class TransferService:
         # FASE 3 — transacao unica: ou tudo acontece, ou nada acontece
         with self._uow_factory() as uow:
             wallets = uow.wallets.lock_pair(payer_id, payee_id)
+            if payer_id not in wallets or payee_id not in wallets:
+                # usuario sem carteira: impossivel via seed, mas o schema nao
+                # obriga — guarda para nao virar KeyError/500
+                raise UserNotFoundError("Carteira do pagador ou do beneficiario nao encontrada")
             payer_wallet = wallets[payer_id]
             # revalidacao POS-LOCK: cobre a janela entre a pre-checagem/autorizacao
             # e a aquisicao do lock (outra transferencia pode ter drenado o saldo)

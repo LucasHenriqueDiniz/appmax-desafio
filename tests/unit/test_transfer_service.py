@@ -100,6 +100,18 @@ def test_pagador_ou_beneficiario_inexistente(store):
         service.execute(value=Decimal("10.00"), payer_id=1, payee_id=999)
 
 
+def test_usuario_sem_carteira_e_erro_de_dominio_nao_crash(store):
+    # usuario 2 existe, mas sem carteira: a fase 1 nao checa a carteira do
+    # beneficiario, entao o caso so aparece no lock — deve virar 404, nao 500
+    del store.wallets[2]
+
+    with pytest.raises(UserNotFoundError):
+        make_service(store).execute(value=Decimal("10.00"), payer_id=1, payee_id=2)
+
+    assert store.wallets[1].balance == Decimal("100.00")
+    assert len(store.transfers) == 0
+
+
 def test_autorizacao_negada_nao_move_dinheiro(store):
     with pytest.raises(TransferNotAuthorizedError):
         make_service(store, FakeAuthorizer("denied")).execute(

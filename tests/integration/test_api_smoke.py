@@ -1,5 +1,6 @@
 """Fiacao completa (rota -> use case -> Postgres) com o payload EXATO do enunciado."""
 
+import logging
 from decimal import Decimal
 
 import pytest
@@ -44,14 +45,17 @@ def test_contrato_do_enunciado_funciona_como_esta_escrito(client, session_factor
     assert get_balance(session_factory, 15) == Decimal("100.00")
 
 
-def test_lojista_pagador_responde_422_com_codigo(client, session_factory):
+def test_lojista_pagador_responde_422_com_codigo(client, session_factory, caplog):
     seed_user(session_factory, 4, "500.00")
     seed_user(session_factory, 15, "0.00", UserType.MERCHANT)
 
-    response = client.post("/transfer", json={"value": 10.0, "payer": 15, "payee": 4})
+    with caplog.at_level(logging.INFO, logger="app.api"):
+        response = client.post("/transfer", json={"value": 10.0, "payer": 15, "payee": 4})
 
     assert response.status_code == 422
     assert response.json()["code"] == "MERCHANT_CANNOT_TRANSFER"
+    # recusas de negocio deixam rastro nos logs (observabilidade)
+    assert any("MERCHANT_CANNOT_TRANSFER" in record.getMessage() for record in caplog.records)
 
 
 def test_saldo_insuficiente_responde_409(client, session_factory):
