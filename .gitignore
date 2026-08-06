@@ -9,6 +9,10 @@ __pycache__/
 .ruff_cache/
 .coverage
 
+# IDE
+.idea/
+.vscode/
+
 # Ambiente
 .env
 
