@@ -16,7 +16,7 @@ import time
 from decimal import Decimal
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import DBAPIError
 
 DB_URL = "postgresql+psycopg://appmax:appmax@localhost:5432/appmax"
 REFRESH_SECONDS = 1.0
@@ -127,17 +127,20 @@ def render(rows, transfers, refusals, highlights) -> list[str]:
 
 def main() -> None:
     os.system("")  # habilita ANSI no console classico do Windows
-    engine = create_engine(DB_URL, pool_pre_ping=True)
+    # connect_timeout: sem ele, uma conexao a um banco que ainda esta subindo
+    # fica pendurada para sempre e o painel congela mudo
+    engine = create_engine(DB_URL, pool_pre_ping=True, connect_args={"connect_timeout": 2})
     previous: dict[int, Decimal] = {}
     highlights: dict[int, tuple[Decimal, int]] = {}  # user_id -> (saldo antigo, ciclos restantes)
 
+    print(f"\x1b[H\x1b[K{DIM}  conectando ao banco...{RESET}\x1b[J")
     while True:
         try:
             with engine.connect() as connection:
                 rows = connection.execute(text(BALANCES_QUERY)).all()
                 transfers = connection.execute(text(TRANSFERS_QUERY)).all()
-        except OperationalError:
-            # banco reiniciando (ex.: docker compose down/up): espera e reconecta
+        except DBAPIError:
+            # banco fora do ar ou reiniciando: espera e tenta de novo
             print(f"\x1b[H\x1b[K{YELLOW}  banco fora do ar — aguardando voltar...{RESET}\x1b[J")
             if os.environ.get("WATCH_ONCE"):
                 break

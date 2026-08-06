@@ -1,4 +1,4 @@
-.PHONY: up down test test-unit lint format
+.PHONY: up down test test-unit lint format seed-reset
 
 up: ## sobe tudo (Postgres + migrations + seed + API) sem passos manuais
 	docker compose up --build
@@ -20,3 +20,6 @@ lint:
 format:
 	uv run ruff check --fix .
 	uv run ruff format .
+
+seed-reset: ## volta saldos e historico ao estado do seed (util em demonstracoes)
+	uv run python scripts/reset_demo.py
