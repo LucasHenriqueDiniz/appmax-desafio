@@ -90,16 +90,25 @@ def render(rows, transfers, refusals, highlights) -> list[str]:
         f"  {DIM}<- nunca muda{RESET}"
     )
     lines.append("")
-    lines.append(f"{BOLD}  ULTIMAS TRANSFERENCIAS{RESET}")
-    lines.append(f"    {DIM}{'hora':<10}{'quem':<12}{'valor':>11}   notificacao{RESET}")
+    lines.append(
+        f"{BOLD}  ULTIMAS TRANSFERENCIAS{RESET} {DIM}(todas concluidas: o dinheiro moveu){RESET}"
+    )
+    header = f"{'hora':<10}{'quem':<12}{'valor':>11}   transferencia   aviso ao recebedor"
+    lines.append(f"    {DIM}{header}{RESET}")
 
     if not transfers:
         lines.append(f"    {DIM}(nenhuma ainda){RESET}")
     for hora, payer_id, payee_id, amount, notification in transfers:
-        color = {"sent": GREEN, "failed": RED, "pending": YELLOW}.get(notification, DIM)
+        # aviso falhar NAO desfaz a transferencia — por isso amarelo, nao vermelho
+        aviso_text, aviso_color = {
+            "sent": ("entregue", GREEN),
+            "failed": ("falhou", YELLOW),
+            "pending": ("pendente", DIM),
+        }.get(notification, (notification, DIM))
         who = f"#{payer_id} -> #{payee_id}"
         lines.append(
-            f"    {DIM}{hora:<10}{RESET}{who:<12}R$ {amount:>8}   {color}{notification}{RESET}"
+            f"    {DIM}{hora:<10}{RESET}{who:<12}R$ {amount:>8}   "
+            f"{GREEN}{'OK':<16}{RESET}{aviso_color}{aviso_text}{RESET}"
         )
     if refusals is not None:
         lines.append("")
