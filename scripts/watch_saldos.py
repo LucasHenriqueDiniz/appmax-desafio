@@ -65,15 +65,21 @@ def render(rows, transfers, highlights) -> list[str]:
     )
     lines.append("")
     lines.append(f"{BOLD}  ULTIMAS TRANSFERENCIAS{RESET}")
+    lines.append(f"    {DIM}{'hora':<10}{'quem':<12}{'valor':>11}   notificacao{RESET}")
 
     if not transfers:
         lines.append(f"    {DIM}(nenhuma ainda){RESET}")
     for hora, payer_id, payee_id, amount, notification in transfers:
         color = {"sent": GREEN, "failed": RED, "pending": YELLOW}.get(notification, DIM)
+        who = f"#{payer_id} -> #{payee_id}"
         lines.append(
-            f"    {DIM}{hora}{RESET}  #{payer_id} -> #{payee_id}  R$ {amount:>8}"
-            f"  {color}{notification}{RESET}"
+            f"    {DIM}{hora:<10}{RESET}{who:<12}R$ {amount:>8}   {color}{notification}{RESET}"
         )
+    lines.append("")
+    lines.append(
+        f"    {DIM}so transferencias CONCLUIDAS viram registro;"
+        f" recusas aparecem nos logs da API{RESET}"
+    )
     return lines
 
 
