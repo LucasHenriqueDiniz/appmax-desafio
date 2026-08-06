@@ -43,7 +43,3 @@ testpaths = ["tests"]
 markers = [
     "integration: testes que exigem Postgres real (docker compose up db)",
 ]
-filterwarnings = [
-    # deprecacao interna do starlette/fastapi (TestClient), nao vem do nosso codigo
-    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
-]
