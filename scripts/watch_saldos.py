@@ -10,6 +10,8 @@ Uso:
 
 import contextlib
 import os
+import re
+import subprocess
 import time
 from decimal import Decimal
 
@@ -39,8 +41,32 @@ TRANSFERS_QUERY = """
     FROM transfers ORDER BY created_at DESC LIMIT 5
 """
 
+# recusas nao viram registro no banco (decisao de design): o painel
+# le as linhas "requisicao recusada" direto dos logs da API
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+_REFUSAL = re.compile(r"(\d{2}:\d{2}:\d{2}).*requisicao recusada: code=(\S+) status=(\S+)")
 
-def render(rows, transfers, highlights) -> list[str]:
+
+def get_refusals(limit: int = 4) -> list[tuple[str, str, str]] | None:
+    """Ultimas recusas lidas dos logs do container. None se docker indisponivel."""
+    try:
+        result = subprocess.run(
+            ["docker", "compose", "logs", "api", "--no-log-prefix", "--since", "30m"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    refusals = []
+    for line in result.stdout.splitlines():
+        match = _REFUSAL.search(_ANSI.sub("", line))
+        if match:
+            refusals.append(match.groups())
+    return refusals[-limit:][::-1]
+
+
+def render(rows, transfers, refusals, highlights) -> list[str]:
     lines = []
     refresh = f"{DIM}(atualiza a cada {REFRESH_SECONDS:.0f}s){RESET}"
     lines.append(f"{BOLD}  SALDOS AO VIVO{RESET} {refresh}")
@@ -75,11 +101,17 @@ def render(rows, transfers, highlights) -> list[str]:
         lines.append(
             f"    {DIM}{hora:<10}{RESET}{who:<12}R$ {amount:>8}   {color}{notification}{RESET}"
         )
-    lines.append("")
-    lines.append(
-        f"    {DIM}so transferencias CONCLUIDAS viram registro;"
-        f" recusas aparecem nos logs da API{RESET}"
-    )
+    if refusals is not None:
+        lines.append("")
+        lines.append(
+            f"{BOLD}  ULTIMAS RECUSAS{RESET} {DIM}(dos logs — recusa nao move dinheiro){RESET}"
+        )
+        if not refusals:
+            lines.append(f"    {DIM}(nenhuma nos ultimos 30 min){RESET}")
+        for hora, code, status in refusals:
+            lines.append(
+                f"    {DIM}{hora:<10}{RESET}{YELLOW}{code:<28}{RESET}{DIM}HTTP {status}{RESET}"
+            )
     return lines
 
 
@@ -93,6 +125,7 @@ def main() -> None:
         with engine.connect() as connection:
             rows = connection.execute(text(BALANCES_QUERY)).all()
             transfers = connection.execute(text(TRANSFERS_QUERY)).all()
+        refusals = get_refusals()
 
         for user_id, _, _, balance in rows:
             if user_id in previous and previous[user_id] != balance:
@@ -103,7 +136,7 @@ def main() -> None:
         }
 
         # home + limpa cada linha: menos flicker que limpar a tela inteira
-        lines = render(rows, transfers, highlights)
+        lines = render(rows, transfers, refusals, highlights)
         frame = "\x1b[H" + "\n".join(f"\x1b[K{line}" for line in lines)
         print(frame + "\x1b[J", flush=True)
 
