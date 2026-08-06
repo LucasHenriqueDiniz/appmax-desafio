@@ -34,6 +34,10 @@ select = [
     "SIM", # simplify
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# scripts soltos precisam ajustar o sys.path antes dos imports do app
+"scripts/*" = ["E402"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [

@@ -52,6 +52,12 @@ Há também um painel ao vivo dos saldos (tabela que atualiza sozinha e destaca 
 uv run python scripts/watch_saldos.py
 ```
 
+E uma demonstração da corrida de concorrência (duas transferências simultâneas da mesma conta, pelo mesmo código da API — exatamente uma conclui e a soma dos saldos se preserva):
+
+```bash
+uv run python scripts/demo_concorrencia.py
+```
+
 ## Como rodar os testes
 
 ```bash
