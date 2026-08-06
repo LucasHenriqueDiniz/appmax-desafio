@@ -107,7 +107,8 @@ def main() -> None:
         if outcome == "concluida":
             print(f"    thread {name}: {GREEN}{BOLD}CONCLUIDA{RESET}")
         else:
-            print(f"    thread {name}: {YELLOW}{BOLD}RECUSADA{RESET} {DIM}(saldo insuficiente){RESET}")
+            motivo = f"{DIM}(saldo insuficiente){RESET}"
+            print(f"    thread {name}: {YELLOW}{BOLD}RECUSADA{RESET} {motivo}")
 
     with engine.connect() as connection:
         saldo_final = get_balance(connection, PAYER)
