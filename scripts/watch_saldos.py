@@ -16,6 +16,7 @@ import time
 from decimal import Decimal
 
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
 
 DB_URL = "postgresql+psycopg://appmax:appmax@localhost:5432/appmax"
 REFRESH_SECONDS = 1.0
@@ -126,14 +127,22 @@ def render(rows, transfers, refusals, highlights) -> list[str]:
 
 def main() -> None:
     os.system("")  # habilita ANSI no console classico do Windows
-    engine = create_engine(DB_URL)
+    engine = create_engine(DB_URL, pool_pre_ping=True)
     previous: dict[int, Decimal] = {}
     highlights: dict[int, tuple[Decimal, int]] = {}  # user_id -> (saldo antigo, ciclos restantes)
 
     while True:
-        with engine.connect() as connection:
-            rows = connection.execute(text(BALANCES_QUERY)).all()
-            transfers = connection.execute(text(TRANSFERS_QUERY)).all()
+        try:
+            with engine.connect() as connection:
+                rows = connection.execute(text(BALANCES_QUERY)).all()
+                transfers = connection.execute(text(TRANSFERS_QUERY)).all()
+        except OperationalError:
+            # banco reiniciando (ex.: docker compose down/up): espera e reconecta
+            print(f"\x1b[H\x1b[K{YELLOW}  banco fora do ar — aguardando voltar...{RESET}\x1b[J")
+            if os.environ.get("WATCH_ONCE"):
+                break
+            time.sleep(REFRESH_SECONDS)
+            continue
         refusals = get_refusals()
 
         for user_id, _, _, balance in rows:
