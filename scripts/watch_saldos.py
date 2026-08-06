@@ -8,6 +8,7 @@ Uso:
     uv run python scripts/watch_saldos.py
 """
 
+import contextlib
 import os
 import time
 from decimal import Decimal
@@ -58,8 +59,10 @@ def render(rows, transfers, highlights) -> list[str]:
         lines.append(line)
 
     lines.append("")
-    lines.append(f"    {GREEN}{BOLD}soma de todos os saldos: R$ {total:>10}{RESET}"
-                 f"  {DIM}<- nunca muda{RESET}")
+    lines.append(
+        f"    {GREEN}{BOLD}soma de todos os saldos: R$ {total:>10}{RESET}"
+        f"  {DIM}<- nunca muda{RESET}"
+    )
     lines.append("")
     lines.append(f"{BOLD}  ULTIMAS TRANSFERENCIAS{RESET}")
 
@@ -104,7 +107,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         main()
-    except KeyboardInterrupt:
-        pass
