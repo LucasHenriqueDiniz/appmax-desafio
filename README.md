@@ -46,6 +46,12 @@ Outras formas de explorar:
 
 A demonstração roda o contrato do enunciado e os cenários de recusa, mostrando os saldos antes e depois de cada um e o invariante da soma total.
 
+Há também um painel ao vivo dos saldos (tabela que atualiza sozinha e destaca mudanças), útil para acompanhar transferências em tempo real:
+
+```bash
+uv run python scripts/watch_saldos.py
+```
+
 ## Como rodar os testes
 
 ```bash
